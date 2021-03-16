@@ -66,8 +66,16 @@ namespace MightyHIDTest
             {
                 Console.WriteLine("Sending report");
                 dev.Write(instruction.Report);
-                Console.WriteLine("Waiting");
-                Thread.Sleep(instruction.WaitPeriod);
+
+                if (instruction.WaitPeriod > TimeSpan.Zero)
+                {
+                    Console.WriteLine("Waiting");
+                    Thread.Sleep(instruction.WaitPeriod);
+                }
+                else
+                {
+                    Console.WriteLine("Not waiting");
+                }
             }
 
             Console.WriteLine("Done!");
