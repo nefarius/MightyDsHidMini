@@ -1,12 +1,37 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using JsonConfig;
 using Mighty.HID;
 
 namespace MightyHIDTest
 {
+    internal class ReplayEntry
+    {
+        public ReplayEntry(string report, int delay)
+        {
+            Report = StringToByteArray(report);
+            WaitPeriod = TimeSpan.FromMilliseconds(delay);
+        }
+
+        public byte[] Report { get; set; }
+
+        public TimeSpan WaitPeriod { get; set; }
+
+        public static byte[] StringToByteArray(string hex)
+        {
+            return Enumerable.Range(0, hex.Length)
+                .Where(x => x % 2 == 0)
+                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                .ToArray();
+        }
+    }
+
     internal class Program
     {
-        public static byte[] StringToByteArray(string hex) {
+        public static byte[] StringToByteArray(string hex)
+        {
             return Enumerable.Range(0, hex.Length)
                 .Where(x => x % 2 == 0)
                 .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
@@ -15,14 +40,6 @@ namespace MightyHIDTest
 
         private static void Main(string[] args)
         {
-            var report = StringToByteArray((string) JsonConfig.Config.Global.OutputReport);
-
-            if (report.Length < 49)
-            {
-                Console.WriteLine("Missing arguments, can't continue");
-                return;
-            }
-
             /* hello, world! */
             Console.WriteLine("Looking for DsHidMini devices");
             /* browse for hid devices */
@@ -36,16 +53,22 @@ namespace MightyHIDTest
 
             Console.WriteLine("Found one");
 
+            var instructions = ((IList<dynamic>) Config.Global.Instructions)
+                .Select(i => new ReplayEntry((string) i.OutputReport, (int) i.WaitPeriodMs)).ToList();
+
             /* new device */
             var dev = new HIDDev();
             /* connect */
             dev.Open(devs.First());
-            /* an example of hid report, report id is always located 
-             * at the beginning of every report. Here it was set to 0x01.
-             * adjust this report so it does meet your hid device reports */
+
             /* send report */
-            Console.WriteLine("Sending report");
-            dev.Write(report);
+            foreach (var instruction in instructions)
+            {
+                Console.WriteLine("Sending report");
+                dev.Write(instruction.Report);
+                Console.WriteLine("Waiting");
+                Thread.Sleep(instruction.WaitPeriod);
+            }
 
             Console.WriteLine("Done!");
             Console.Read();
