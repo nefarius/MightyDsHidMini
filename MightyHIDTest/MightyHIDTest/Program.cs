@@ -86,7 +86,7 @@ namespace MightyHIDTest
                     if(P == instruction.TimesToSend) // Break; if on the last repeat to prevent an aditional delay on Thread.Sleep(instruction.RepDelay)
                     {
                         Console.WriteLine();
-                        Console.WriteLine( P + "commands sent" ); // informs the number of sent commands
+                        Console.WriteLine( P + " command(s) sent" ); // informs the number of sent commands
                         break;
                     }
                     if (instruction.RepDelay > TimeSpan.Zero) // Print "-" if RepDelay > 0
@@ -99,7 +99,7 @@ namespace MightyHIDTest
 
                 if (instruction.WaitPeriod > TimeSpan.Zero)
                 {
-                    Console.WriteLine("Waiting");
+                    Console.WriteLine("Waiting for " + instruction.WaitPeriod + "ms");
                     Thread.Sleep(instruction.WaitPeriod);
                 }
                 else
