@@ -5,19 +5,25 @@ using System.Threading;
 using JsonConfig;
 using Mighty.HID;
 
-namespace MightyHIDTest
+namespace MightyDHMTest
 {
     internal class ReplayEntry
     {
-        public ReplayEntry(string report, int delay)
+        public ReplayEntry(string report, int delay, int timestosend, int repdelay)
         {
             Report = StringToByteArray(report);
             WaitPeriod = TimeSpan.FromMilliseconds(delay);
+            TimesToSend = timestosend;
+            RepDelay = TimeSpan.FromMilliseconds(repdelay);
         }
 
         public byte[] Report { get; set; }
 
         public TimeSpan WaitPeriod { get; set; }
+
+        public int TimesToSend { get; set; }
+
+        public TimeSpan RepDelay { get; set; }
 
         public static byte[] StringToByteArray(string hex)
         {
@@ -54,7 +60,7 @@ namespace MightyHIDTest
             Console.WriteLine("Found one");
 
             var instructions = ((IList<dynamic>) Config.Global.Instructions)
-                .Select(i => new ReplayEntry((string) i.OutputReport, (int) i.WaitPeriodMs)).ToList();
+                .Select(i => new ReplayEntry((string) i.OutputReport, (int) i.WaitPeriodMs, (int) i.SendXTimes, (int)i.RepeatDelay)).ToList();
 
             /* new device */
             var dev = new HIDDev();
@@ -62,10 +68,34 @@ namespace MightyHIDTest
             dev.Open(devs.First());
 
             /* send report */
+
+            int CurrentI = 0;
+            Console.WriteLine();
+
             foreach (var instruction in instructions)
             {
-                Console.WriteLine("Sending report");
-                dev.Write(instruction.Report);
+                Console.WriteLine("Executing instructions block number " + CurrentI);
+
+                int P = 1;
+
+                while(P <= instruction.TimesToSend) 
+                {
+                    dev.Write(instruction.Report);
+                    Console.Write("."); // Print "." to inform that a command has been sent
+        
+                    if(P == instruction.TimesToSend) // Break; if on the last repeat to prevent an aditional delay on Thread.Sleep(instruction.RepDelay)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine( P + "commands sent" ); // informs the number of sent commands
+                        break;
+                    }
+                    if (instruction.RepDelay > TimeSpan.Zero) // Print "-" if RepDelay > 0
+                    {
+                        Console.Write("-");
+                        Thread.Sleep(instruction.RepDelay);
+                    }
+                    P++;
+                }
 
                 if (instruction.WaitPeriod > TimeSpan.Zero)
                 {
@@ -76,7 +106,10 @@ namespace MightyHIDTest
                 {
                     Console.WriteLine("Not waiting");
                 }
+                CurrentI++;
+                Console.WriteLine();
             }
+
 
             Console.WriteLine("Done!");
             Console.Read();
