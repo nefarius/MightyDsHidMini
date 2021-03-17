@@ -75,15 +75,15 @@ namespace MightyHIDTest
             int FullRepeat = Convert.ToInt32(userin);
             Console.WriteLine();
 
-            int FR = 0;
-            while(FR < FullRepeat)
+            int FR = 1;
+            while(FullRepeat == 0 || FR <= FullRepeat)
             {
 
                 Console.Clear();
 
                 if (FullRepeat >= 1)
                 {
-                    Console.WriteLine("===== EXECUTING (" + (FR + 1) + "/" + FullRepeat + ") =====");
+                    Console.WriteLine("===== EXECUTING (" + FR + "/" + FullRepeat + ") =====");
                     Console.WriteLine();
                 }
 
