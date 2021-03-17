@@ -5,7 +5,7 @@ using System.Threading;
 using JsonConfig;
 using Mighty.HID;
 
-namespace MightyDHMTest
+namespace MightyHIDTest
 {
     internal class ReplayEntry
     {
