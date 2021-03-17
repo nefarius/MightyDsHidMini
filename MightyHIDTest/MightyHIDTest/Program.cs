@@ -69,45 +69,66 @@ namespace MightyHIDTest
 
             /* send report */
 
-            int CurrentI = 0;
+            String userin;
+            Console.Write("Execute how many times? (0 = indefinitely): ");
+            userin = Console.ReadLine();
+            int FullRepeat = Convert.ToInt32(userin);
             Console.WriteLine();
 
-            foreach (var instruction in instructions)
+            int FR = 0;
+            while(FR < FullRepeat)
             {
-                Console.WriteLine("Executing instructions block number " + CurrentI);
 
-                int P = 1;
+                Console.Clear();
 
-                while(P <= instruction.TimesToSend) 
+                if (FullRepeat >= 1)
                 {
-                    dev.Write(instruction.Report);
-                    Console.Write("."); // Print "." to inform that a command has been sent
-        
-                    if(P == instruction.TimesToSend) // Break; if on the last repeat to prevent an aditional delay on Thread.Sleep(instruction.RepDelay)
+                    Console.WriteLine("===== EXECUTING (" + (FR + 1) + "/" + FullRepeat + ") =====");
+                    Console.WriteLine();
+                }
+
+                int CurrentI = 0;
+
+                foreach (var instruction in instructions)
+                {
+                    Console.WriteLine("Executing instructions block number " + CurrentI);
+
+                    int P = 1;
+
+                    while (P <= instruction.TimesToSend)
                     {
-                        Console.WriteLine();
-                        Console.WriteLine( P + " command(s) sent" ); // informs the number of sent commands
-                        break;
+                        dev.Write(instruction.Report);
+                        Console.Write("."); // Print "." to inform that a command has been sent
+
+                        if (P == instruction.TimesToSend) // Break; if on the last repeat to prevent an aditional delay on Thread.Sleep(instruction.RepDelay)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine(P + " command(s) sent"); // informs the number of sent commands
+                            break;
+                        }
+                        if (instruction.RepDelay > TimeSpan.Zero) // Print "-" if RepDelay > 0
+                        {
+                            Console.Write("-");
+                            Thread.Sleep(instruction.RepDelay);
+                        }
+                        P++;
                     }
-                    if (instruction.RepDelay > TimeSpan.Zero) // Print "-" if RepDelay > 0
+
+                    if (instruction.WaitPeriod > TimeSpan.Zero)
                     {
-                        Console.Write("-");
-                        Thread.Sleep(instruction.RepDelay);
+                        Console.WriteLine("Waiting for " + instruction.WaitPeriod + "ms");
+                        Thread.Sleep(instruction.WaitPeriod);
                     }
-                    P++;
+                    else
+                    {
+                        Console.WriteLine("Not waiting");
+                    }
+                    CurrentI++;
+                    Console.WriteLine();
                 }
 
-                if (instruction.WaitPeriod > TimeSpan.Zero)
-                {
-                    Console.WriteLine("Waiting for " + instruction.WaitPeriod + "ms");
-                    Thread.Sleep(instruction.WaitPeriod);
-                }
-                else
-                {
-                    Console.WriteLine("Not waiting");
-                }
-                CurrentI++;
-                Console.WriteLine();
+                if (FullRepeat >= 1) { FR++; }
+
             }
 
 
