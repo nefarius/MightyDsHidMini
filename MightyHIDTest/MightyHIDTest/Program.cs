@@ -9,15 +9,21 @@ namespace MightyHIDTest
 {
     internal class ReplayEntry
     {
-        public ReplayEntry(string report, int delay)
+        public ReplayEntry(string report, int delay, int timestosend, int repdelay)
         {
             Report = StringToByteArray(report);
             WaitPeriod = TimeSpan.FromMilliseconds(delay);
+            TimesToSend = timestosend;
+            RepDelay = TimeSpan.FromMilliseconds(repdelay);
         }
 
         public byte[] Report { get; set; }
 
         public TimeSpan WaitPeriod { get; set; }
+
+        public int TimesToSend { get; set; }
+
+        public TimeSpan RepDelay { get; set; }
 
         public static byte[] StringToByteArray(string hex)
         {
@@ -54,7 +60,7 @@ namespace MightyHIDTest
             Console.WriteLine("Found one");
 
             var instructions = ((IList<dynamic>) Config.Global.Instructions)
-                .Select(i => new ReplayEntry((string) i.OutputReport, (int) i.WaitPeriodMs)).ToList();
+                .Select(i => new ReplayEntry((string) i.OutputReport, (int) i.WaitPeriodMs, (int) i.SendXTimes, (int)i.RepeatDelay)).ToList();
 
             /* new device */
             var dev = new HIDDev();
@@ -62,21 +68,69 @@ namespace MightyHIDTest
             dev.Open(devs.First());
 
             /* send report */
-            foreach (var instruction in instructions)
-            {
-                Console.WriteLine("Sending report");
-                dev.Write(instruction.Report);
 
-                if (instruction.WaitPeriod > TimeSpan.Zero)
+            String userin;
+            Console.Write("Execute how many times? (0 = indefinitely): ");
+            userin = Console.ReadLine();
+            int FullRepeat = Convert.ToInt32(userin);
+            Console.WriteLine();
+
+            int FR = 1;
+            while(FullRepeat == 0 || FR <= FullRepeat)
+            {
+
+                Console.Clear();
+
+                if (FullRepeat >= 1)
                 {
-                    Console.WriteLine("Waiting");
-                    Thread.Sleep(instruction.WaitPeriod);
+                    Console.WriteLine("===== EXECUTING (" + FR + "/" + FullRepeat + ") =====");
+                    Console.WriteLine();
                 }
-                else
+
+                int CurrentI = 0;
+
+                foreach (var instruction in instructions)
                 {
-                    Console.WriteLine("Not waiting");
+                    Console.WriteLine("Executing instructions block number " + CurrentI);
+
+                    int P = 1;
+
+                    while (P <= instruction.TimesToSend)
+                    {
+                        dev.Write(instruction.Report);
+                        Console.Write("."); // Print "." to inform that a command has been sent
+
+                        if (P == instruction.TimesToSend) // Break; if on the last repeat to prevent an aditional delay on Thread.Sleep(instruction.RepDelay)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine(P + " command(s) sent"); // informs the number of sent commands
+                            break;
+                        }
+                        if (instruction.RepDelay > TimeSpan.Zero) // Print "-" if RepDelay > 0
+                        {
+                            Console.Write("-");
+                            Thread.Sleep(instruction.RepDelay);
+                        }
+                        P++;
+                    }
+
+                    if (instruction.WaitPeriod > TimeSpan.Zero)
+                    {
+                        Console.WriteLine("Waiting for " + instruction.WaitPeriod + "ms");
+                        Thread.Sleep(instruction.WaitPeriod);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Not waiting");
+                    }
+                    CurrentI++;
+                    Console.WriteLine();
                 }
+
+                if (FullRepeat >= 1) { FR++; }
+
             }
+
 
             Console.WriteLine("Done!");
             Console.Read();
