@@ -3,16 +3,14 @@
     {
       "OutputReport": "01000000002F0100000000000004FF27100032FF27100032FF27100032FF27100032000000000000000000000000000000",
       "SendXTimes": 3,
-	  "RepeatDelay": 2000,
-	  "WaitPeriodMs": 5000
-	},
-	{
+      "RepeatDelay": 2000,
+      "WaitPeriodMs": 5000
+    },
+    {
       "OutputReport": "0100000000000000000000000002FF27100032FF27100032FF27100032FF27100032000000000000000000000000000000",
       "SendXTimes": 1,
-	  "RepeatDelay": 10000,
-	  "WaitPeriodMs": 0
-	}
-	
-	
-  ] 
+      "RepeatDelay": 10000,
+      "WaitPeriodMs": 0
+    }
+  ]
 }
