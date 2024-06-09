@@ -72,7 +72,7 @@ namespace MightyHIDTest
             String userin;
             Console.Write("Execute how many times? (0 = indefinitely): ");
             userin = Console.ReadLine();
-            int FullRepeat = Convert.ToInt32(userin);
+            int FullRepeat = string.IsNullOrEmpty(userin) ? 0 : Convert.ToInt32(userin);
             Console.WriteLine();
 
             int FR = 1;
